@@ -1,0 +1,14 @@
+{
+  "name": "kilo-status",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Kilo Code terminals report their status to Herdr and show in its Agents panel.",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.18"
+  },
+  "scripts": {
+    "test": "node --test"
+  }
+}
