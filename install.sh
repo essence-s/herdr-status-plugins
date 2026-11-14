@@ -1,32 +1,53 @@
 #!/usr/bin/env bash
-# Install a mod from this repo into ~/.config/herdr-app/mods/
+# Copy mods from this repo into ~/.config/herdr-app/mods/
 #
-# Usage: ./install.sh <mod-name>
+# Usage:
+#   ./install.sh                       copy every mod
+#   ./install.sh kilo-status           copy one mod
+#   ./install.sh kilo-status freebuff-status
 #
-# Example:
-#   ./install.sh kilo-status      # installs kilo-status/mods/kilo-status/
-#
-# Each <name>/mods/<name>/ folder is copied (not linked) because Herdr does not
-# hot reload a mod whose folder is a symlink.
+# Copying the folder is only the first step for a mod that installs something
+# inside the agent. The script prints the exact `status.mjs install` command
+# for those mods; run it afterwards.
 set -euo pipefail
 
-MODS_DIR="$HOME/.config/herdr-app/mods"
+MODS_DIR="${HERDR_CONFIG_DIR:-${XDG_CONFIG_HOME:-$HOME/.config}/herdr-app}/mods"
 mkdir -p "$MODS_DIR"
 
-NAME="${1:-kilo-status}"
-DIR="./$NAME/mods/$NAME"
+names=("$@")
+if [ ${#names[@]} -eq 0 ]; then
+  for dir in */mods/*/; do
+    [ -d "$dir" ] || continue
+    names+=("$(basename "$dir")")
+  done
+fi
 
-if [ ! -d "$DIR" ]; then
-  echo "No mod found at $DIR" >&2
-  echo "Usage: $0 <mod-name>" >&2
+if [ ${#names[@]} -eq 0 ]; then
+  echo "No mods found (expected <name>/mods/<name>/)." >&2
   exit 1
 fi
 
-echo "Installing $NAME -> $MODS_DIR/$NAME"
-cp -R "$DIR" "$MODS_DIR/$NAME"
+for name in "${names[@]}"; do
+  src="./$name/mods/$name"
+  if [ ! -d "$src" ]; then
+    echo "No mod found at $src" >&2
+    echo "Usage: $0 [mod-name...]" >&2
+    exit 1
+  fi
 
-if command -v herdr-app >/dev/null 2>&1; then
-  herdr-app check "$MODS_DIR/$NAME" || true
-fi
+  dest="$MODS_DIR/$name"
+  rm -rf "$dest"
+  mkdir -p "$dest"
+  cp -R "$src/." "$dest/"
+  echo "Installed $name -> $dest"
 
-echo "Done. Restart the agent terminals so their plugins load."
+  if command -v herdr-app >/dev/null 2>&1; then
+    herdr-app check "$dest" || true
+  fi
+
+  if [ -f "$dest/status.mjs" ]; then
+    echo "  Next: node \"$dest/status.mjs\" install"
+  fi
+done
+
+echo "Done. Restart the agent terminals so their mods load."
