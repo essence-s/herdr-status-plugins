@@ -8,6 +8,15 @@ Herdr only lists a terminal as an agent when its program reports a status with O
 
 Needs Node 20 or later on your `PATH`, macOS or Linux, and Kilo 7.8 or later.
 
+First clone the repo and enter the mod folder:
+
+```
+git clone https://github.com/essence-s/herdr-status-plugins.git
+cd herdr-status-plugins/kilo-status
+```
+
+From that folder, copy the mod to Herdr and install the Kilo plugin:
+
 ```
 cp -R mods/kilo-status ~/.config/herdr-app/mods/
 node ~/.config/herdr-app/mods/kilo-status/status.mjs install
@@ -32,18 +41,18 @@ rm -rf ~/.config/herdr-app/mods/kilo-status
 
 ## What it does
 
-| Kilo event | Report to Herdr |
-| --- | --- |
-| plugin loads | `idle` (the terminal becomes an agent before the first turn) |
-| `chat.message`, `tool.execute.before/after`, `command.execute.before` | `working` |
-| `session.status` `busy` / `retry` | `working` (`retry` adds the attempt and message) |
-| `permission.asked` | `blocked` with `kind=permission` and the permission plus its patterns |
-| `question.asked` | `blocked` with `kind=question` and the question |
-| `session.error` `ProviderAuthError` | `blocked` with `kind=auth` and the message |
-| other `session.error` | `error` with the message |
-| `session.idle` | `done` |
-| `session.deleted` | `clear` (the terminal stops being an agent) |
-| plugin `dispose` / process exit | `clear` |
+| Kilo event                                                            | Report to Herdr                                                       |
+| --------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| plugin loads                                                          | `idle` (the terminal becomes an agent before the first turn)          |
+| `chat.message`, `tool.execute.before/after`, `command.execute.before` | `working`                                                             |
+| `session.status` `busy` / `retry`                                     | `working` (`retry` adds the attempt and message)                      |
+| `permission.asked`                                                    | `blocked` with `kind=permission` and the permission plus its patterns |
+| `question.asked`                                                      | `blocked` with `kind=question` and the question                       |
+| `session.error` `ProviderAuthError`                                   | `blocked` with `kind=auth` and the message                            |
+| other `session.error`                                                 | `error` with the message                                              |
+| `session.idle`                                                        | `done`                                                                |
+| `session.deleted`                                                     | `clear` (the terminal stops being an agent)                           |
+| plugin `dispose` / process exit                                       | `clear`                                                               |
 
 Each report is `ESC ]7501;state=<state>:app=kilocode[:kind=<kind>][:title=<base64>][:msg=<base64>] ESC \`, written to the terminal (`/dev/tty`, else a tty of this process, else the tty of the nearest parent process that has one). `title` is the Kilo session title, or the project folder before the first session; `msg` is the short reason for a blocked or failed turn. Both are single-line, control-character-free, and capped at the protocol's 192 and 2048 bytes.
 
